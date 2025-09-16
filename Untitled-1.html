@@ -1,0 +1,602 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>匿名评论系统 - 二维码修复版</title>
+    <style>
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+        }
+        
+        body {
+            background: linear-gradient(135deg, #6e8efb, #a777e3);
+            color: #333;
+            line-height: 1.6;
+            padding: 20px;
+            min-height: 100vh;
+        }
+        
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            display: flex;
+            flex-direction: column;
+            gap: 20px;
+        }
+        
+        header {
+            background: rgba(255, 255, 255, 0.9);
+            padding: 20px;
+            border-radius: 10px;
+            text-align: center;
+            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1);
+        }
+        
+        h1 {
+            color: #4a4a4a;
+            margin-bottom: 10px;
+        }
+        
+        .description {
+            color: #666;
+            font-size: 1.1em;
+            max-width: 800px;
+            margin: 0 auto;
+        }
+        
+        .main-content {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 20px;
+        }
+        
+        .post-section, .comments-section {
+            flex: 1;
+            min-width: 300px;
+            background: rgba(255, 255, 255, 0.9);
+            padding: 25px;
+            border-radius: 10px;
+            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1);
+        }
+        
+        .post {
+            margin-bottom: 25px;
+        }
+        
+        .post-title {
+            font-size: 1.8em;
+            color: #4a4a4a;
+            margin-bottom: 15px;
+            padding-bottom: 10px;
+            border-bottom: 2px solid #6e8efb;
+        }
+        
+        .post-content {
+            font-size: 1.1em;
+            line-height: 1.8;
+            color: #555;
+        }
+        
+        .post-meta {
+            margin-top: 15px;
+            color: #888;
+            font-size: 0.9em;
+        }
+        
+        .comment-form {
+            margin-top: 20px;
+        }
+        
+        .form-group {
+            margin-bottom: 15px;
+        }
+        
+        label {
+            display: block;
+            margin-bottom: 5px;
+            font-weight: 600;
+            color: #555;
+        }
+        
+        input[type="text"], textarea {
+            width: 100%;
+            padding: 12px;
+            border: 1px solid #ddd;
+            border-radius: 8px;
+            font-size: 1em;
+            transition: border-color 0.3s;
+        }
+        
+        input[type="text"]:focus, textarea:focus {
+            outline: none;
+            border-color: #6e8efb;
+            box-shadow: 0 0 0 2px rgba(110, 142, 251, 0.2);
+        }
+        
+        textarea {
+            resize: vertical;
+            min-height: 120px;
+        }
+        
+        button {
+            background: linear-gradient(to right, #6e8efb, #a777e3);
+            color: white;
+            border: none;
+            padding: 12px 25px;
+            border-radius: 8px;
+            cursor: pointer;
+            font-size: 1em;
+            font-weight: 600;
+            transition: transform 0.2s, box-shadow 0.2s;
+            margin-right: 10px;
+            margin-top: 10px;
+        }
+        
+        button:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 4px 10px rgba(0, 0, 0, 0.15);
+        }
+        
+        .comments-list {
+            margin-top: 25px;
+            max-height: 400px;
+            overflow-y: auto;
+        }
+        
+        .comment {
+            background: #f9f9f9;
+            padding: 20px;
+            border-radius: 8px;
+            margin-bottom: 15px;
+            border-left: 4px solid #a777e3;
+            animation: fadeIn 0.5s ease;
+        }
+        
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(10px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+        
+        .comment-content {
+            font-size: 1.1em;
+            margin-bottom: 10px;
+            color: #555;
+        }
+        
+        .comment-meta {
+            color: #888;
+            font-size: 0.9em;
+            display: flex;
+            justify-content: space-between;
+        }
+        
+        .qr-section {
+            background: rgba(255, 255, 255, 0.9);
+            padding: 25px;
+            border-radius: 10px;
+            text-align: center;
+            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1);
+        }
+        
+        .qr-container {
+            margin: 20px auto;
+            width: 200px;
+            height: 200px;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            border: 1px solid #eee;
+            border-radius: 8px;
+            background: white;
+            padding: 10px;
+        }
+        
+        .url-display {
+            margin: 20px 0;
+            padding: 20px;
+            background: #f8f9fa;
+            border-radius: 8px;
+            border: 2px solid #e9ecef;
+        }
+        
+        .url-display h3 {
+            margin-top: 0;
+            margin-bottom: 15px;
+            color: #495057;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+        }
+        
+        .url-input-container {
+            display: flex;
+            gap: 10px;
+            margin-bottom: 10px;
+        }
+        
+        .url-input {
+            flex: 1;
+            padding: 12px;
+            border: 1px solid #ced4da;
+            border-radius: 6px;
+            font-size: 1em;
+            background: white;
+        }
+        
+        .url-copy-btn {
+            background: #28a745;
+            color: white;
+            border: none;
+            padding: 12px 20px;
+            border-radius: 6px;
+            cursor: pointer;
+            font-size: 1em;
+            transition: background 0.2s;
+            white-space: nowrap;
+        }
+        
+        .url-copy-btn:hover {
+            background: #218838;
+        }
+        
+        .copy-feedback {
+            font-size: 0.9em;
+            color: #28a745;
+            text-align: center;
+            height: 20px;
+            opacity: 0;
+            transition: opacity 0.3s;
+        }
+        
+        .copy-feedback.show {
+            opacity: 1;
+        }
+        
+        .instructions {
+            margin-top: 20px;
+            background: #f0f4ff;
+            padding: 15px;
+            border-radius: 8px;
+            font-size: 0.9em;
+            color: #555;
+        }
+        
+        .success-message {
+            color: #28a745;
+            margin-top: 10px;
+            text-align: center;
+            font-weight: 600;
+            animation: fadeIn 0.5s ease;
+        }
+        
+        .error-message {
+            color: #dc3545;
+            margin-top: 10px;
+            text-align: center;
+            font-weight: 600;
+            animation: fadeIn 0.5s ease;
+        }
+        
+        .no-comments {
+            text-align: center;
+            color: #888;
+            padding: 20px;
+            font-style: italic;
+        }
+        
+        .clear-btn {
+            background: linear-gradient(to right, #ff6b6b, #ff9e7d);
+        }
+        
+        .author-name {
+            font-weight: 600;
+            color: #6e8efb;
+        }
+        
+        .qr-status {
+            margin-top: 10px;
+            font-size: 0.9em;
+            color: #666;
+        }
+        
+        @media (max-width: 768px) {
+            .main-content {
+                flex-direction: column;
+            }
+            
+            .url-input-container {
+                flex-direction: column;
+            }
+        }
+    </style>
+    <!-- 使用更稳定的QRCode库 -->
+    <script src="https://cdn.jsdelivr.net/npm/davidshimjs-qrcodejs@0.0.2/qrcode.min.js"></script>
+</head>
+<body>
+    <div class="container">
+        <header>
+            <h1>匿名评论系统 - 二维码修复版</h1>
+            <p class="description">所有数据仅保存在当前浏览器会话中，页面关闭后自动清除，无需任何后端存储。</p>
+        </header>
+        
+        <div class="main-content">
+            <div class="post-section">
+                <div class="post">
+                    <h2 class="post-title">欢迎使用匿名评论系统</h2>
+                    <div class="post-content">
+                        <p>这是一个完全在前端运行的匿名评论系统，所有数据仅保存在浏览器内存中。</p>
+                        <p>当您关闭页面或刷新浏览器时，所有评论将被自动清除，确保真正的匿名性和隐私保护。</p>
+                        <p>您可以自定义一个匿名名称，然后发表评论。</p>
+                    </div>
+                    <div class="post-meta">
+                        发布时间: 2023年5月15日 • 作者: 系统管理员
+                    </div>
+                </div>
+                
+                <div class="comment-form">
+                    <h3>发表匿名评论</h3>
+                    
+                    <div class="form-group">
+                        <label for="author-name">您的匿名名称：</label>
+                        <input type="text" id="author-name" placeholder="请输入一个匿名名称" maxlength="20">
+                    </div>
+                    
+                    <div class="form-group">
+                        <label for="comment-content">评论内容：</label>
+                        <textarea id="comment-content" placeholder="请输入您的评论..."></textarea>
+                    </div>
+                    
+                    <button id="submit-comment">提交评论</button>
+                    <button id="clear-comments" class="clear-btn">清空所有评论</button>
+                    <div id="message"></div>
+                </div>
+            </div>
+            
+            <div class="comments-section">
+                <h3>最新评论 <span id="comment-count">(0)</span></h3>
+                <div class="comments-list" id="comments-list">
+                    <div class="no-comments">暂无评论，快来发表第一条吧！</div>
+                </div>
+            </div>
+        </div>
+        
+        <div class="qr-section">
+            <h3>扫描二维码分享此页面</h3>
+            <div class="qr-container" id="qrcode">
+                <div id="qr-placeholder">正在生成二维码...</div>
+            </div>
+            <div class="qr-status" id="qr-status">二维码状态: 正在生成...</div>
+            
+            <div class="url-display">
+                <h3>
+                    当前页面URL
+                    <button class="url-copy-btn" onclick="copyUrlToClipboard()">复制链接</button>
+                </h3>
+                <div class="url-input-container">
+                    <input type="text" class="url-input" id="page-url" readonly>
+                </div>
+                <div class="copy-feedback" id="copy-feedback">✅ 链接已复制到剪贴板！</div>
+            </div>
+            
+            <div class="instructions">
+                <p>使用手机相机或任何二维码扫描应用扫描此二维码，即可分享此页面给其他人。</p>
+                <p>其他人扫描后可以直接访问此页面并发表匿名评论。</p>
+                <p><strong>注意：</strong>所有评论仅在当前浏览器会话中有效，页面关闭后自动清除。</p>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // 初始化页面URL显示
+        function initPageUrl() {
+            const pageUrl = window.location.href;
+            console.log("当前页面URL:", pageUrl);
+            document.getElementById('page-url').value = pageUrl;
+            return pageUrl;
+        }
+        
+        // 生成二维码 - 使用更稳定的qrcode.js库
+        function generateQRCode() {
+            const currentUrl = initPageUrl();
+            const qrcodeElement = document.getElementById('qrcode');
+            const qrStatus = document.getElementById('qr-status');
+            
+            // 清除可能存在的旧二维码
+            qrcodeElement.innerHTML = '';
+            
+            try {
+                // 使用qrcode.js库生成二维码
+                const qrcode = new QRCode(qrcodeElement, {
+                    text: currentUrl,
+                    width: 180,
+                    height: 180,
+                    colorDark: "#000000",
+                    colorLight: "#ffffff",
+                    correctLevel: QRCode.CorrectLevel.H
+                });
+                
+                qrStatus.textContent = '二维码状态: 已生成 - 扫描即可分享此页面';
+                console.log('二维码生成成功');
+                
+            } catch (error) {
+                console.error('二维码生成错误:', error);
+                qrcodeElement.innerHTML = '<div style="color: #dc3545; text-align: center;">二维码生成失败</div>';
+                qrStatus.textContent = '二维码状态: 生成失败 - ' + error.message;
+                
+                // 备用方案：使用图片API生成二维码
+                generateQRCodeFallback(currentUrl, qrcodeElement, qrStatus);
+            }
+        }
+        
+        // 备用方案：使用在线API生成二维码
+        function generateQRCodeFallback(url, container, statusElement) {
+            statusElement.textContent = '二维码状态: 使用备用方案生成...';
+            
+            // 使用第三方API生成二维码
+            const apiUrl = `https://api.qrserver.com/v1/create-qr-code/?size=180x180&data=${encodeURIComponent(url)}`;
+            
+            const img = document.createElement('img');
+            img.src = apiUrl;
+            img.alt = 'QR Code';
+            img.onload = function() {
+                container.innerHTML = '';
+                container.appendChild(img);
+                statusElement.textContent = '二维码状态: 已生成(备用方案) - 扫描即可分享此页面';
+            };
+            
+            img.onerror = function() {
+                container.innerHTML = '<div style="color: #dc3545; text-align: center;">二维码生成失败</div>';
+                statusElement.textContent = '二维码状态: 生成失败，请刷新页面重试';
+            };
+        }
+        
+        // 复制页面URL到剪贴板
+        function copyUrlToClipboard() {
+            const urlInput = document.getElementById('page-url');
+            urlInput.select();
+            
+            try {
+                const successful = document.execCommand('copy');
+                const feedback = document.getElementById('copy-feedback');
+                if (successful) {
+                    feedback.textContent = '✅ 链接已复制到剪贴板！';
+                    feedback.classList.add('show');
+                    setTimeout(() => {
+                        feedback.classList.remove('show');
+                    }, 3000);
+                } else {
+                    // 使用现代Clipboard API
+                    navigator.clipboard.writeText(urlInput.value).then(() => {
+                        feedback.textContent = '✅ 链接已复制到剪贴板！';
+                        feedback.classList.add('show');
+                        setTimeout(() => {
+                            feedback.classList.remove('show');
+                        }, 3000);
+                    }).catch(err => {
+                        feedback.textContent = '❌ 复制失败，请手动选择复制';
+                        feedback.classList.add('show');
+                    });
+                }
+            } catch (err) {
+                console.error('复制失败:', err);
+                alert('自动复制失败，请手动选择并复制链接：\n' + urlInput.value);
+            }
+        }
+        
+        // 从内存加载评论
+        function loadComments() {
+            const comments = JSON.parse(sessionStorage.getItem('anonymousComments')) || [];
+            const commentsList = document.getElementById('comments-list');
+            const commentCount = document.getElementById('comment-count');
+            
+            commentCount.textContent = `(${comments.length})`;
+            
+            if (comments.length === 0) {
+                commentsList.innerHTML = '<div class="no-comments">暂无评论，快来发表第一条吧！</div>';
+                return;
+            }
+            
+            commentsList.innerHTML = '';
+            
+            comments.sort((a, b) => new Date(b.timestamp) - new Date(a.timestamp));
+            
+            comments.forEach(comment => {
+                const date = new Date(comment.timestamp);
+                const formattedDate = `${date.getFullYear()}年${date.getMonth()+1}月${date.getDate()}日 ${date.getHours().toString().padStart(2, '0')}:${date.getMinutes().toString().padStart(2, '0')}`;
+                
+                const commentElement = document.createElement('div');
+                commentElement.className = 'comment';
+                commentElement.innerHTML = `
+                    <p class="comment-content">${comment.content}</p>
+                    <div class="comment-meta">
+                        <span class="author-name">${comment.author}</span>
+                        <span>${formattedDate}</span>
+                    </div>
+                `;
+                commentsList.appendChild(commentElement);
+            });
+        }
+
+        // 保存评论到内存
+        function saveComment(author, content) {
+            const comments = JSON.parse(sessionStorage.getItem('anonymousComments')) || [];
+            const newComment = {
+                content: content,
+                author: author || "匿名用户",
+                timestamp: new Date().toISOString()
+            };
+            
+            comments.push(newComment);
+            sessionStorage.setItem('anonymousComments', JSON.stringify(comments));
+            return newComment;
+        }
+
+        // 清空所有评论
+        function clearAllComments() {
+            sessionStorage.removeItem('anonymousComments');
+            loadComments();
+            
+            const messageElement = document.getElementById('message');
+            messageElement.innerHTML = '<p class="success-message">已清空所有评论</p>';
+            
+            setTimeout(() => {
+                messageElement.innerHTML = '';
+            }, 2000);
+        }
+
+        // 处理评论提交
+        document.getElementById('submit-comment').addEventListener('click', function() {
+            const author = document.getElementById('author-name').value.trim();
+            const content = document.getElementById('comment-content').value.trim();
+            const messageElement = document.getElementById('message');
+            
+            if (!content) {
+                messageElement.innerHTML = '<p class="error-message">评论内容不能为空</p>';
+                return;
+            }
+            
+            if (content.length > 500) {
+                messageElement.innerHTML = '<p class="error-message">评论内容不能超过500字</p>';
+                return;
+            }
+            
+            saveComment(author, content);
+            messageElement.innerHTML = '<p class="success-message">评论提交成功！</p>';
+            document.getElementById('comment-content').value = '';
+            loadComments();
+            
+            setTimeout(() => {
+                messageElement.innerHTML = '';
+            }, 3000);
+        });
+
+        // 清空评论按钮
+        document.getElementById('clear-comments').addEventListener('click', function() {
+            if (confirm('确定要清空所有评论吗？此操作不可撤销。')) {
+                clearAllComments();
+            }
+        });
+
+        // 页面加载时初始化
+        document.addEventListener('DOMContentLoaded', function() {
+            console.log("页面加载完成，初始化二维码...");
+            loadComments();
+            
+            // 延迟一点生成二维码，确保QRCode库已加载
+            setTimeout(generateQRCode, 100);
+            
+            setTimeout(() => {
+                const messageElement = document.getElementById('message');
+                messageElement.innerHTML = '<p class="success-message">提示：所有评论仅在当前会话中有效，页面关闭后自动清除</p>';
+                setTimeout(() => {
+                    messageElement.innerHTML = '';
+                }, 5000);
+            }, 1000);
+        });
+    </script>
+</body>
+</html>
